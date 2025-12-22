@@ -3,7 +3,7 @@ import cors from "cors";
 import mqtt from "mqtt";
 import fs from "fs";
 import path from "path";
-import { MQTT_URL, MQTT_TOPIC, MQTT_STATUS_TOPIC } from "./config";
+import { MQTT_URL, MQTT_TOPIC, MQTT_STATUS_TOPIC, MQTT_USERNAME, MQTT_PASSWORD } from "./config";
 
 const TAG_LABELS_FILE = process.env.TAG_LABELS_FILE ?? "tags.csv";
 
@@ -45,7 +45,7 @@ function loadTagLabels(filePath: string): Map<string, string> {
     console.warn("[TAGS] labels file not found:", filePath);
     return labels;
   }
-
+MQTT_STATUS_TOPIC
   const raw = fs.readFileSync(filePath, "utf8");
   raw
     .split(/\r?\n/)
@@ -88,7 +88,10 @@ function broadcast(obj) {
   clients.forEach((res) => res.write(data));
 }
 
-const mqttClient = mqtt.connect(MQTT_URL);
+const mqttClient = mqtt.connect(MQTT_URL, {
+  username: MQTT_USERNAME,
+  password: MQTT_PASSWORD,
+});
 
 mqttClient.on("connect", () => {
   console.log("[MQTT] connected:", MQTT_URL);
