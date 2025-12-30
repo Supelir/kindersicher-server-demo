@@ -83,6 +83,25 @@ app.post("/reset", (req, res) => {
   res.status(200).send("OK");
 });
 
+// Allow UI to send control signals (e.g., PASS) which will be published to MQTT
+app.post('/signal', express.json(), (req, res) => {
+  const { gateId, signal } = req.body ?? {};
+  if (typeof gateId !== 'string' || typeof signal !== 'string') {
+    res.status(400).send('gateId and signal required');
+    return;
+  }
+  const payload = { gateId, signal, timestamp: Date.now() };
+  mqttClient.publish(MQTT_TOPIC, JSON.stringify(payload), { qos: 1 }, (err) => {
+    if (err) {
+      console.error('[MQTT] publish failed for /signal:', err);
+      res.status(500).send('publish failed');
+      return;
+    }
+    console.log('[HTTP] /signal published to MQTT:', payload);
+    res.status(200).send('OK');
+  });
+});
+
 function broadcast(obj) {
   const data = `data: ${JSON.stringify(obj)}\n\n`;
   clients.forEach((res) => res.write(data));
